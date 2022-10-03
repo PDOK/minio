@@ -703,16 +703,21 @@ func (a *azureObjects) ListObjects(ctx context.Context, bucket, prefix, marker, 
 				delete(blob.Metadata, "md5sum")
 			}
 
-			objects = append(objects, minio.ObjectInfo{
-				Bucket:          bucket,
-				Name:            blob.Name,
-				ModTime:         blob.Properties.LastModified,
-				Size:            *blob.Properties.ContentLength,
-				ETag:            etag,
-				ContentType:     *blob.Properties.ContentType,
-				ContentEncoding: *blob.Properties.ContentEncoding,
-				UserDefined:     blob.Metadata,
-			})
+			object := minio.ObjectInfo{
+				Bucket:      bucket,
+				Name:        blob.Name,
+				ModTime:     blob.Properties.LastModified,
+				Size:        *blob.Properties.ContentLength,
+				ETag:        etag,
+				UserDefined: blob.Metadata,
+			}
+			if blob.Properties.ContentType != nil {
+				object.ContentEncoding = *blob.Properties.ContentType
+			}
+			if blob.Properties.ContentEncoding != nil {
+				object.ContentEncoding = *blob.Properties.ContentEncoding
+			}
+			objects = append(objects, object)
 		}
 
 		for _, blobPrefix := range resp.Segment.BlobPrefixes {
